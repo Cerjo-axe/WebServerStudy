@@ -9,9 +9,10 @@ namespace WebServer
         private static Socket listener;
 
         public static void Start(){
+            Console.WriteLine("Starting Server");
             InitializeListener();
-            listener.Listen(100);
-            RunServer(listener);
+            Task.Run(()=> RunServer());
+            Console.WriteLine("Server Started");
         }
 
         private static void InitializeListener(){
@@ -21,14 +22,17 @@ namespace WebServer
             Console.WriteLine("Listening on : http://"+ localEndPoint.Address.ToString()+"/");
             listener = new Socket(localEndPoint.AddressFamily,SocketType.Stream, ProtocolType.Tcp);
             listener.Bind(localEndPoint);
+            listener.Listen(100);
+            Console.WriteLine("Server initialized and listening...");
         }
 
-        private static void RunServer(Socket localListener){
+        private static async Task RunServer(){
+            Console.WriteLine("Server is running...");
             while (true){
-                Socket context = localListener.Accept();
                 try
                 {
-                    ReturnResponse(context);
+                    Socket context = await listener.AcceptAsync();
+                    await ReturnResponse(context);
                 }
                 catch (Exception ex)
                 {
@@ -37,16 +41,23 @@ namespace WebServer
             }
         }
 
-        private static void ReturnResponse(Socket localContext){
-            byte[] buffer = new byte[2048];
-            int receivedData = localContext.Receive(buffer,SocketFlags.None);
-            string data = Encoding.UTF8.GetString(buffer, 0 , receivedData);
-            Console.WriteLine(data);
-            byte[] returnMsg = Encoding.UTF8.GetBytes("" +
-                "HTTP/1.1 404 Not Found\r\n" +
-                "Content-Type: text/html\r\n" +
-                "\r\n" +"Awaiting for a message");
-            localContext.Send(returnMsg);
+        private static async Task ReturnResponse(Socket localContext){
+            try
+            {
+                byte[] buffer = new byte[2048];
+                int receivedData = await localContext.ReceiveAsync(buffer,SocketFlags.None);
+                string data = Encoding.UTF8.GetString(buffer, 0 , receivedData);
+                Console.WriteLine(data);
+                byte[] returnMsg = Encoding.UTF8.GetBytes("" +
+                    "HTTP/1.1 404 Not Found\r\n" +
+                    "Content-Type: text/html\r\n" +
+                    "\r\n" +"Awaiting for a message");
+                await localContext.SendAsync(returnMsg);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+            }
         }
     }
 }

@@ -17,6 +17,8 @@ namespace WebServer
         public static void Start()
         {
             Server.Start();
+            Console.WriteLine("Press Enter to finish application");
+            Console.ReadLine();
         }
 
     }
