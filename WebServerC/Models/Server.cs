@@ -32,6 +32,7 @@ namespace WebServer
                 try
                 {
                     Socket context = await listener.AcceptAsync();
+                    await HandleRequest(context);
                     await ReturnResponse(context);
                 }
                 catch (Exception ex)
@@ -41,23 +42,51 @@ namespace WebServer
             }
         }
 
+        private static async Task HandleRequest(Socket localContext){
+            string requestString;
+            requestString = await GetData(localContext);
+            //ADD VERIFICATION IF STRING IS NULL TO PARSE THE REQUEST DATA
+            Console.WriteLine(requestString);
+        }
+
         private static async Task ReturnResponse(Socket localContext){
-            try
-            {
-                byte[] buffer = new byte[2048];
-                int receivedData = await localContext.ReceiveAsync(buffer,SocketFlags.None);
-                string data = Encoding.UTF8.GetString(buffer, 0 , receivedData);
-                Console.WriteLine(data);
+            try{
                 byte[] returnMsg = Encoding.UTF8.GetBytes("" +
                     "HTTP/1.1 404 Not Found\r\n" +
                     "Content-Type: text/html\r\n" +
-                    "\r\n" +"Awaiting for a message");
+                    "\r\n" +"<html><head><meta http-equiv='content-type' content='text/html; charset=utf-8'/></head>Hello Browser!</html>");
                 await localContext.SendAsync(returnMsg);
+                localContext.Shutdown(SocketShutdown.Both);
+            } catch (Exception ex){
+                Console.WriteLine(ex);
+            } finally {
+                localContext.Close();
+            }
+        }
+
+        private static async Task<string> GetData(Socket localContext){
+            byte[] buffer = new byte[1024];
+            string data = null;
+            try{
+                while (localContext.Available>0){
+                    Console.WriteLine("Looping read Data");
+                    int receivedData = await localContext.ReceiveAsync(buffer,SocketFlags.None);
+                    data += Encoding.UTF8.GetString(buffer, 0 , receivedData);
+                }
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex);
             }
+            return data;
         }
+    }
+
+    struct HTTPRequest{
+        string method;
+        string path;
+        string httpVersion;
+        string header;
+        string body;
     }
 }
