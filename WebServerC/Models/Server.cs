@@ -1,6 +1,8 @@
+using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace WebServer
 {
@@ -44,9 +46,9 @@ namespace WebServer
 
         private static async Task HandleRequest(Socket localContext){
             string requestString;
-            requestString = await GetData(localContext);
-            //ADD VERIFICATION IF STRING IS NULL TO PARSE THE REQUEST DATA
+            requestString = await GetMsg(localContext);
             Console.WriteLine(requestString);
+            RequestBuilder.GetDataFromMsg(requestString);
         }
 
         private static async Task ReturnResponse(Socket localContext){
@@ -64,7 +66,7 @@ namespace WebServer
             }
         }
 
-        private static async Task<string> GetData(Socket localContext){
+        private static async Task<string> GetMsg(Socket localContext){
             byte[] buffer = new byte[1024];
             string data = null;
             try{
@@ -80,13 +82,7 @@ namespace WebServer
             }
             return data;
         }
-    }
 
-    struct HTTPRequest{
-        string method;
-        string path;
-        string httpVersion;
-        string header;
-        string body;
+        
     }
 }
