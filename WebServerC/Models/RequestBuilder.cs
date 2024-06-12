@@ -12,11 +12,8 @@ namespace WebServer
                 if(dividedMsg.Length==0){
                     return data;
                 }
-                string[] test = dividedMsg[0].Split(" ");
-                data.method = test[0];
-                data.path = test[1];
-                data.httpVersion = test[2];
-                Console.WriteLine(data.method);
+                data.SetMethodandPath(dividedMsg[0]);
+                Console.WriteLine(data.ToString());
                 return data;
             }
             catch (Exception ex)
